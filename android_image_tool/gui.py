@@ -7,6 +7,7 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
     QPlainTextEdit, QPushButton, QComboBox, QVBoxLayout, QWidget, QInputDialog,
+    QGroupBox, QFormLayout, QListWidget, QSplitter, QTreeWidget, QTreeWidgetItem,
 )
 
 from .android import parse_payload, parse_super
@@ -44,6 +45,42 @@ class MainWindow(QMainWindow):
         self.language.currentIndexChanged.connect(self.change_language)
         self.details = QPlainTextEdit()
         self.details.setReadOnly(True)
+        self.details.setMaximumBlockCount(300)
+        self.summary = QFormLayout()
+        self.format_value = QLabel("-")
+        self.size_value = QLabel("-")
+        self.status_value = QLabel(self.tr("ready"))
+        self.summary.addRow("Format", self.format_value)
+        self.summary.addRow("Size", self.size_value)
+        self.summary.addRow("Status", self.status_value)
+        summary_box = QGroupBox("Image overview")
+        summary_box.setLayout(self.summary)
+        self.contents = QTreeWidget()
+        self.contents.setHeaderLabels(["Contents", "Type"])
+        self.contents.itemSelectionChanged.connect(self.show_selected_item)
+        contents_box = QGroupBox("Image contents")
+        contents_layout = QVBoxLayout(contents_box)
+        contents_layout.addWidget(self.contents)
+        self.operations = QListWidget()
+        self.operations.addItems(["Inspect", "Extract", "Rebuild", "Raw edit", "ADB/Fastboot"])
+        operations_box = QGroupBox("ROM operations")
+        operations_layout = QVBoxLayout(operations_box)
+        operations_layout.addWidget(self.operations)
+        left = QVBoxLayout()
+        left.addWidget(summary_box)
+        left.addWidget(contents_box, 1)
+        left.addWidget(operations_box)
+        left_widget = QWidget()
+        left_widget.setLayout(left)
+        right = QVBoxLayout()
+        right.addWidget(QLabel("Details"))
+        right.addWidget(self.details, 1)
+        right_widget = QWidget()
+        right_widget.setLayout(right)
+        splitter = QSplitter()
+        splitter.addWidget(left_widget)
+        splitter.addWidget(right_widget)
+        splitter.setSizes([280, 620])
         row = QHBoxLayout()
         row.addWidget(self.open_button)
         row.addWidget(self.extract_button)
@@ -55,7 +92,7 @@ class MainWindow(QMainWindow):
         row.addWidget(self.language)
         layout = QVBoxLayout()
         layout.addLayout(row)
-        layout.addWidget(self.details)
+        layout.addWidget(splitter, 1)
         root = QWidget()
         root.setLayout(layout)
         self.setCentralWidget(root)
@@ -91,20 +128,31 @@ class MainWindow(QMainWindow):
         try:
             info = detect_format(path)
             lines = [f"{info.format}\n{info.details}\nSize: {info.size:,} bytes"]
+            self.format_value.setText(info.format)
+            self.size_value.setText(f"{info.size:,} bytes")
+            self.status_value.setText(self.tr("opened", path=path.name))
+            self.contents.clear()
+            root = QTreeWidgetItem([path.name, info.format])
+            self.contents.addTopLevelItem(root)
             if is_sparse(path):
                 raw_path = self.temp_dir / f"{path.stem}.raw"
                 unsparse(path, raw_path)
                 lines.append(f"Sparse expanded size: {raw_path.stat().st_size:,} bytes")
+                root.addChild(QTreeWidgetItem(["Expanded raw image", "raw"]))
             elif info.format == "ext4":
                 with Ext4Image(path) as image:
                     lines.extend([f"Block size: {image.block_size}", f"Label: {image.label}"])
+                    for entry in image.list_dir()[:500]:
+                        root.addChild(QTreeWidgetItem([entry, "file/directory"]))
                     lines.extend(image.list_dir()[:500])
             elif info.format == "super.img":
                 value = parse_super(path)
                 lines.append(f"LP metadata: {value.major}.{value.minor}, size={value.metadata_size}")
+                root.addChild(QTreeWidgetItem(["Logical partitions", "metadata"]))
             elif info.format == "payload.bin":
                 value = parse_payload(path)
                 lines.append(f"Payload version: {value.version}, manifest={value.manifest_size}")
+                root.addChild(QTreeWidgetItem(["OTA operations", "payload"]))
             elif info.format == "Android boot image":
                 lines.append(str(parse_boot(path)))
             elif info.format == "AVB vbmeta":
@@ -113,6 +161,11 @@ class MainWindow(QMainWindow):
             self.details.setPlainText("\n".join(lines))
         except Exception as error:
             self.show_error(error)
+
+    def show_selected_item(self) -> None:
+        selected = self.contents.selectedItems()
+        if selected:
+            self.status_value.setText(selected[0].text(0))
 
     def extract_all(self) -> None:
         if not self.image:
@@ -132,6 +185,7 @@ class MainWindow(QMainWindow):
                         except (FileNotFoundError, IsADirectoryError, ValueError):
                             continue
             self.details.appendPlainText(f"\nExtracted files: {count}")
+            self.status_value.setText(f"Extracted {count} files")
         except Exception as error:
             self.show_error(error)
 
@@ -148,6 +202,7 @@ class MainWindow(QMainWindow):
         try:
             rebuild_ext4(Path(staging), Path(output), int(size_text) * 1024 * 1024)
             self.details.appendPlainText("\n" + self.tr("saved", path=output))
+            self.status_value.setText(self.tr("saved", path=Path(output).name))
         except (OSError, ValueError, RuntimeError) as error:
             QMessageBox.critical(self, self.tr("title"), str(error))
 
