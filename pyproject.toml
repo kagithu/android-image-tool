@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "android-image-tool"
+version = "0.1.0"
+description = "Cross-platform Android partition image manager"
+requires-python = ">=3.10"
+dependencies = ["PySide6>=6.7"]
+
+[project.scripts]
+android-image-tool = "android_image_tool.cli:main"
+android-image-tool-gui = "android_image_tool.gui:main"
+
+[tool.setuptools.packages.find]
+include = ["android_image_tool*"]
