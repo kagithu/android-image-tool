@@ -40,6 +40,8 @@ Cross-platform (Windows, Linux, macOS) Android partition image manager.
 
 The application never writes to the source image. Rebuild operations produce a new output file.
 
+本ソフトは元イメージを直接変更しません。再構築操作では常に新しい出力ファイルを作成します。
+
 ## Run / 起動方法
 
 ### English
@@ -73,6 +75,8 @@ android-image-tool-gui
 
 「イメージを開く」で解析対象を選択します。ext4を編集する場合は「すべて展開」で作業フォルダーへ展開し、ファイルを変更してから「ext4を再構築」を実行してください。
 
+### English: Raw editing and CLI
+
 For logo and other vendor-specific raw images, use **Edit raw bytes**. The tool always writes a new output image, creates `<source>.bak` once, validates the byte range, and displays the output SHA-256. Raw edits are dangerous and require explicit confirmation; verify the image with the device/vendor tooling before flashing.
 
 Useful ROM-development CLI commands:
@@ -103,11 +107,27 @@ ADB/Fastboot tools must be installed separately (Android SDK platform-tools). Pa
 
 Ramdisk editing currently preserves file contents and paths but does not yet rebuild the complete boot image header/checksums. Replace the ramdisk through a boot-image-aware tool and verify AVB before flashing.
 
-## Notes
+### 日本語: raw編集とCLI
+
+logoなどのvendor固有rawイメージは、GUIの**rawバイトを編集**を使用してください。元ファイルは直接変更せず、新しい出力イメージを作成し、`<元ファイル>.bak`を一度だけ作成します。バイト範囲を検証し、出力SHA-256を表示します。raw編集は危険なため必ず確認ダイアログが表示されます。flash前に端末メーカーや開発環境のツールで検証してください。
+
+ROM開発向けCLIコマンドは、上記の英語セクションと同じです。ADB/FastbootはAndroid SDK Platform-Toolsの導入が必要です。partitionバックアップはroot化済み端末が必要で、`adb exec-out`を使用します。flashコマンドは実行しません。
+
+ramdisk編集では現在、ramdiskの内容とパスを保持して展開・再梱包しますが、boot image全体のheaderやchecksumを自動再構築する処理は別途必要です。対応するboot imageツールで置き換え、flash前にAVBを検証してください。
+
+## Notes / 注意事項
+
+### English
 
 EROFS can be detected and inspected at the filesystem signature level, but writing EROFS is intentionally not enabled. `mke2fs` is required for ext4 rebuild; the app searches `PATH` and common Android platform-tool locations.
 
 The GUI log is written to `%USERPROFILE%\\.android-image-tool.log` on Windows and `~/.android-image-tool.log` on Linux/macOS. Never flash an image without a verified backup and a matching AVB/signing workflow.
+
+### 日本語
+
+EROFSはファイルシステム署名の検出・基本確認に対応していますが、EROFSへの書き込みは安全のため無効化しています。ext4再構築には`mke2fs`が必要で、アプリは`PATH`と一般的なPlatform-Tools配置を検索します。
+
+GUIログはWindowsでは`%USERPROFILE%\\.android-image-tool.log`、Linux/macOSでは`~/.android-image-tool.log`に保存されます。flash前には必ずバックアップとAVB/署名手順を確認してください。
 
 ![Android Image Tool](assets/logo.png)
 
