@@ -10,4 +10,5 @@ build/
 *.bin
 *.zip
 *.bak
+tools/
 .DS_Store

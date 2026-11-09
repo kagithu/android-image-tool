@@ -1,24 +1,42 @@
 # Android Image Tool
 
+<p align="center">
+  <img src="assets/logo.png" alt="Android Image Tool app icon" width="220">
+</p>
+
+<p align="center"><strong>Android Image Tool app icon</strong> / <strong>アプリのアイコン</strong></p>
+
 Cross-platform (Windows, Linux, macOS) Android partition image manager.
 
-## Features
+## Features / 機能
 
-- Raw and Android sparse image detection and conversion.
-- `super.img` metadata inspection (LP metadata header and partition table).
-- `payload.bin` header and operation inspection.
-- ext4 superblock, inode, extent, directory listing, and file extraction.
-- ext4 image rebuilding from a staging directory using `mke2fs`.
-- Japanese and English GUI/CLI messages.
-- Warning-gated raw binary patching for logo/boot/vendor-specific images.
-- Automatic source backup (`.bak`), SHA-256 reporting, and error logging.
-- Android boot image and vbmeta inspection/extraction.
-- Ramdisk gzip/cpio unpacking and repacking for `init`, `fstab`, and early-boot changes.
-- Image validation and SHA-256 integrity reporting.
-- ROM project manifests, safe workspace copies, binary/text diffs, and crash-log summaries.
-- `super.img`, payload, EROFS, and OTA ZIP tool integrations with explicit missing-tool errors.
-- Boot repacking, AVB signing wrappers, and ADB device profiles with partition inventories.
-- ADB/Fastboot device information, logcat capture, and partition backup helpers.
+### English
+
+- Detect and expand raw and Android sparse images.
+- Inspect `super.img` metadata and dynamic-partition tooling.
+- Inspect and extract `payload.bin` through an official/upstream tool.
+- Browse, extract, and rebuild ext4 images.
+- Inspect/extract Android boot images and edit gzip/cpio ramdisks.
+- Inspect and sign AVB/vbmeta through `avbtool`.
+- Validate image boundaries, metadata, formats, and SHA-256 hashes.
+- Create ROM project manifests, safe workspaces, binary/text diffs, and OTA ZIPs.
+- Analyze boot/crash logs and collect ADB/Fastboot device profiles.
+- Warning-gated raw editing with backup and output hashing.
+- Japanese and English UI strings stored in editable JSON files.
+
+### 日本語
+
+- raw / Android sparseイメージの判定・展開
+- `super.img`のメタデータ解析とdynamic partition向けツール連携
+- `payload.bin`の解析・展開
+- ext4イメージの閲覧・抽出・再構築
+- Android boot imageの解析・抽出、gzip/cpio ramdisk編集
+- `avbtool`によるAVB/vbmeta解析・署名連携
+- イメージ境界・メタデータ・形式・SHA-256検証
+- ROMプロジェクト管理、作業コピー、差分比較、OTA ZIP作成
+- boot/crashログ解析、ADB/Fastboot端末プロファイル取得
+- 警告・バックアップ付きraw編集
+- JSONファイルで変更できる日本語/英語UI
 
 The application never writes to the source image. Rebuild operations produce a new output file.
 
@@ -74,6 +92,13 @@ EROFS can be detected and inspected at the filesystem signature level, but writi
 The GUI log is written to `%USERPROFILE%\\.android-image-tool.log` on Windows and `~/.android-image-tool.log` on Linux/macOS. Never flash an image without a verified backup and a matching AVB/signing workflow.
 
 ![Android Image Tool](assets/logo.png)
+
+## Documentation / ドキュメント
+
+- [English guide](docs/README-en.md)
+- [日本語ガイド](docs/README-ja.md)
+- [English FAQ](docs/FAQ-en.md)
+- [よくある質問（日本語）](docs/FAQ-ja.md)
 
 ---
 

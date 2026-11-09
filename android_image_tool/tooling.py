@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import json
 import os
 import platform
 import shutil
-import subprocess
 import urllib.request
 import webbrowser
+from collections.abc import Callable
 from pathlib import Path
+from zipfile import ZipFile, BadZipFile
 
 ROOT = Path(__file__).resolve().parent.parent
 TOOLS_DIR = ROOT / "tools"
@@ -40,13 +40,24 @@ def platform_tools_url() -> str:
     return "https://dl.google.com/android/repository/platform-tools-latest-linux.zip"
 
 
-def download_platform_tools(progress: callable | None = None) -> Path:
+def download_platform_tools(progress: Callable[..., object] | None = None) -> Path:
     TOOLS_DIR.mkdir(parents=True, exist_ok=True)
-    archive = TOOLS_DIR / "platform-tools.zip"
-    urllib.request.urlretrieve(platform_tools_url(), archive, progress)
+    archive = TOOLS_DIR / "platform-tools.download"
+    try:
+        urllib.request.urlretrieve(platform_tools_url(), archive, progress)
+        with ZipFile(archive) as package:
+            for name in package.namelist():
+                target = (TOOLS_DIR / name).resolve()
+                if TOOLS_DIR.resolve() not in target.parents:
+                    raise ValueError("Downloaded archive contains an unsafe path")
+            package.extractall(TOOLS_DIR)
+    except (OSError, BadZipFile, ValueError) as error:
+        archive.unlink(missing_ok=True)
+        raise RuntimeError(f"Platform-Tools download failed: {error}") from error
     extract = TOOLS_DIR / "platform-tools"
-    shutil.unpack_archive(archive, TOOLS_DIR)
     archive.unlink(missing_ok=True)
+    if not extract.is_dir():
+        raise RuntimeError("Platform-Tools archive did not contain platform-tools/")
     return extract
 
 
