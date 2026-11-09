@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import logging
 from pathlib import Path
+from PySide6.QtGui import QIcon
 
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
@@ -14,6 +15,7 @@ from .android import parse_payload, parse_super
 from .avb import parse_vbmeta
 from .boot import parse_boot
 from .devices import AndroidTools
+from .crash import analyze_file
 from .editing import patch_binary
 from .ext4 import Ext4Image, rebuild_ext4
 from .formats import detect_format
@@ -30,6 +32,9 @@ logging.basicConfig(
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
+        logo = Path(__file__).resolve().parent.parent / "assets" / "logo.png"
+        if logo.is_file():
+            self.setWindowIcon(QIcon(str(logo)))
         self.image: Path | None = None
         self.lang = "ja"
         self.temp_dir = Path(tempfile.mkdtemp(prefix="android-image-tool-"))
@@ -39,6 +44,7 @@ class MainWindow(QMainWindow):
         self.raw_edit_button = QPushButton()
         self.device_button = QPushButton()
         self.logcat_button = QPushButton()
+        self.crash_button = QPushButton()
         self.language = QComboBox()
         self.language.addItem("日本語", "ja")
         self.language.addItem("English", "en")
@@ -88,6 +94,7 @@ class MainWindow(QMainWindow):
         row.addWidget(self.raw_edit_button)
         row.addWidget(self.device_button)
         row.addWidget(self.logcat_button)
+        row.addWidget(self.crash_button)
         row.addWidget(QLabel("Language / 言語"))
         row.addWidget(self.language)
         layout = QVBoxLayout()
@@ -102,6 +109,7 @@ class MainWindow(QMainWindow):
         self.raw_edit_button.clicked.connect(self.edit_raw)
         self.device_button.clicked.connect(self.show_devices)
         self.logcat_button.clicked.connect(self.capture_logcat)
+        self.crash_button.clicked.connect(self.analyze_crash)
         self.refresh_text()
 
     def tr(self, key: str, **values: object) -> str:
@@ -115,6 +123,7 @@ class MainWindow(QMainWindow):
         self.raw_edit_button.setText(self.tr("raw_edit"))
         self.device_button.setText(self.tr("devices"))
         self.logcat_button.setText(self.tr("logcat"))
+        self.crash_button.setText("Crash analysis")
 
     def change_language(self) -> None:
         self.lang = self.language.currentData()
@@ -272,9 +281,21 @@ class MainWindow(QMainWindow):
         except Exception as error:
             self.show_error(error)
 
+    def analyze_crash(self) -> None:
+        filename, _ = QFileDialog.getOpenFileName(self, "Analyze log", "", "Logs (*.log *.txt);;All files (*)")
+        if not filename:
+            return
+        try:
+            self.details.setPlainText(str(analyze_file(Path(filename))))
+        except Exception as error:
+            self.show_error(error)
+
 
 def main() -> None:
     app = QApplication([])
+    logo = Path(__file__).resolve().parent.parent / "assets" / "logo.png"
+    if logo.is_file():
+        app.setWindowIcon(QIcon(str(logo)))
     window = MainWindow()
     window.resize(900, 600)
     window.show()

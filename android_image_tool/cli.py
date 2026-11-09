@@ -7,6 +7,10 @@ from .android import parse_payload, parse_super
 from .avb import avbtool_info, parse_vbmeta
 from .boot import extract_boot_parts, pack_ramdisk, parse_boot, unpack_ramdisk
 from .devices import AndroidTools
+from .compare import binary_diff, text_diff
+from .crash import analyze_file
+from .project import load_project, save_project
+from .romtools import build_ota, rebuild_erofs, repack_boot, sign_vbmeta, unpack_payload, unpack_super
 from .editing import patch_binary
 from .ext4 import Ext4Image, rebuild_ext4
 from .formats import detect_format
@@ -59,6 +63,38 @@ def main() -> None:
     ramdisk_pack.add_argument("--compression", choices=("gzip", "cpio"), default="gzip")
     validate = sub.add_parser("validate")
     validate.add_argument("image", type=Path)
+    project = sub.add_parser("project-scan")
+    project.add_argument("root", type=Path)
+    project.add_argument("output", type=Path)
+    diff = sub.add_parser("diff")
+    diff.add_argument("source", type=Path)
+    diff.add_argument("target", type=Path)
+    diff.add_argument("--text", action="store_true")
+    crash = sub.add_parser("analyze-crash")
+    crash.add_argument("log", type=Path)
+    super_unpack = sub.add_parser("super-unpack")
+    super_unpack.add_argument("image", type=Path)
+    super_unpack.add_argument("output", type=Path)
+    payload_unpack = sub.add_parser("payload-unpack")
+    payload_unpack.add_argument("payload", type=Path)
+    payload_unpack.add_argument("output", type=Path)
+    erofs = sub.add_parser("erofs-rebuild")
+    erofs.add_argument("source", type=Path)
+    erofs.add_argument("output", type=Path)
+    ota = sub.add_parser("ota-zip")
+    ota.add_argument("source", type=Path)
+    ota.add_argument("output", type=Path)
+    boot_pack = sub.add_parser("boot-pack")
+    boot_pack.add_argument("kernel", type=Path)
+    boot_pack.add_argument("ramdisk", type=Path)
+    boot_pack.add_argument("output", type=Path)
+    boot_pack.add_argument("extra", nargs="*")
+    sign = sub.add_parser("vbmeta-sign")
+    sign.add_argument("image", type=Path)
+    sign.add_argument("key", type=Path)
+    sign.add_argument("algorithm")
+    sign.add_argument("output", type=Path)
+    sub.add_parser("device-profile")
     args = parser.parse_args()
     try:
         if args.command == "info":
@@ -112,6 +148,29 @@ def main() -> None:
         elif args.command == "validate":
             for check in validate_image(args.image):
                 print(f"[{check.level}] {check.message}")
+        elif args.command == "project-scan":
+            save_project(args.root, args.output)
+            print(args.output)
+        elif args.command == "diff":
+            print(text_diff(args.source, args.target) if args.text else binary_diff(args.source, args.target))
+        elif args.command == "analyze-crash":
+            print(analyze_file(args.log))
+        elif args.command == "super-unpack":
+            print(unpack_super(args.image, args.output))
+        elif args.command == "payload-unpack":
+            print(unpack_payload(args.payload, args.output))
+        elif args.command == "erofs-rebuild":
+            print(rebuild_erofs(args.source, args.output))
+        elif args.command == "ota-zip":
+            build_ota(args.source, args.output)
+            print(args.output)
+        elif args.command == "boot-pack":
+            print(repack_boot(args.kernel, args.ramdisk, args.output, args.extra))
+        elif args.command == "vbmeta-sign":
+            print(sign_vbmeta(args.image, args.key, args.algorithm, args.output))
+        elif args.command == "device-profile":
+            import json
+            print(json.dumps(AndroidTools().device_profile(), indent=2))
         else:
             print(f"expanded {unsparse(args.image, args.output)} bytes")
     except (OSError, ValueError, RuntimeError) as error:

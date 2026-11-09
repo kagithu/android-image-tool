@@ -30,6 +30,31 @@ class AndroidTools:
     def adb_shell(self, *args: str) -> str:
         return self._run([self.adb, "shell", *args])
 
+    def getprop(self) -> dict[str, str]:
+        output = self.adb_shell("getprop")
+        properties: dict[str, str] = {}
+        for line in output.splitlines():
+            if line.startswith("[") and "]: [" in line:
+                key, value = line[1:].split("]: [", 1)
+                properties[key] = value.rstrip("]")
+        return properties
+
+    def partition_names(self) -> list[str]:
+        output = self.adb_shell("ls", "-1", "/dev/block/by-name")
+        return [line.strip() for line in output.splitlines() if line.strip()]
+
+    def device_profile(self) -> dict[str, object]:
+        properties = self.getprop()
+        return {
+            "model": properties.get("ro.product.model", "unknown"),
+            "manufacturer": properties.get("ro.product.manufacturer", "unknown"),
+            "android": properties.get("ro.build.version.release", "unknown"),
+            "api": properties.get("ro.build.version.sdk", "unknown"),
+            "slot": properties.get("ro.boot.slot_suffix", "unknown"),
+            "ab": properties.get("ro.build.ab_update", "unknown"),
+            "partitions": self.partition_names(),
+        }
+
     def getvar(self, variable: str) -> str:
         return self._run([self.fastboot, "getvar", variable], timeout=60)
 
