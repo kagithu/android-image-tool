@@ -16,6 +16,7 @@ from .avb import parse_vbmeta
 from .boot import parse_boot
 from .devices import AndroidTools
 from .crash import analyze_file
+from .tooling import MissingToolError, download_platform_tools, open_tool_instructions
 from .editing import patch_binary
 from .ext4 import Ext4Image, rebuild_ext4
 from .formats import detect_format
@@ -260,6 +261,9 @@ class MainWindow(QMainWindow):
             error,
             exc_info=(type(error), error, error.__traceback__),
         )
+        if isinstance(error, MissingToolError):
+            self.offer_tool(error, lambda: None)
+            return
         QMessageBox.critical(self, self.tr("title"), str(error) or self.tr("unexpected"))
 
     def show_devices(self) -> None:
@@ -268,6 +272,8 @@ class MainWindow(QMainWindow):
             self.details.appendPlainText(
                 "\nADB:\n" + tools.adb_devices() + "\nFastboot:\n" + tools.fastboot_devices(),
             )
+        except MissingToolError as error:
+            self.offer_tool(error, self.show_devices)
         except Exception as error:
             self.show_error(error)
 
@@ -278,8 +284,30 @@ class MainWindow(QMainWindow):
         try:
             text = AndroidTools().logcat(Path(output))
             self.details.appendPlainText(f"\nSaved logcat: {output}\nLines: {len(text.splitlines())}")
+        except MissingToolError as error:
+            self.offer_tool(error, self.capture_logcat)
         except Exception as error:
             self.show_error(error)
+
+    def offer_tool(self, error: MissingToolError, retry: callable) -> None:
+        message = self.tr("missing_tool", tool=error.tool, purpose=error.purpose)
+        answer = QMessageBox.question(
+            self, self.tr("title"), message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            if error.tool in {"adb", "fastboot"}:
+                download_platform_tools()
+                self.status_value.setText(self.tr("downloaded", path="tools/platform-tools"))
+                retry()
+            else:
+                open_tool_instructions(error.tool)
+                self.status_value.setText(self.tr("official"))
+        except Exception as download_error:
+            self.show_error(download_error)
 
     def analyze_crash(self) -> None:
         filename, _ = QFileDialog.getOpenFileName(self, "Analyze log", "", "Logs (*.log *.txt);;All files (*)")

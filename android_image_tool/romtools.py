@@ -4,13 +4,11 @@ import shutil
 import subprocess
 import zipfile
 from pathlib import Path
+from .tooling import find_tool
 
 
 def _tool(name: str) -> str:
-    path = shutil.which(name)
-    if not path:
-        raise FileNotFoundError(f"{name} is required; install Android build tools and add it to PATH")
-    return path
+    return find_tool(name, "ROM image operation")
 
 
 def run_tool(name: str, args: list[str], timeout: int = 600) -> str:

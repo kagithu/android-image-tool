@@ -74,3 +74,39 @@ EROFS can be detected and inspected at the filesystem signature level, but writi
 The GUI log is written to `%USERPROFILE%\\.android-image-tool.log` on Windows and `~/.android-image-tool.log` on Linux/macOS. Never flash an image without a verified backup and a matching AVB/signing workflow.
 
 ![Android Image Tool](assets/logo.png)
+
+---
+
+## 日本語
+
+Androidのsystem/vendor/recovery/logoなどを扱う、Windows・Linux・macOS対応のカスタムROM開発支援ツールです。
+
+### 未導入ツールの扱い
+
+機能に必要な外部ツールが見つからない場合、GUIはその機能を実行する前に確認を表示します。承諾すると、ADB/FastbootはGoogle公式のPlatform-Toolsを`tools/`へ取得します。その他の`avbtool`、`mkbootimg`、`lpunpack`、`mkfs.erofs`などは、対応する公式または上流プロジェクトの案内を開きます。無断で実行ファイルを取得・実行することはありません。
+
+### ファイルで変更できる言語
+
+画面文言は[locales/ja.json](locales/ja.json)と[locales/en.json](locales/en.json)に分離しています。JSONを編集して再起動すれば、独自の翻訳へ変更できます。
+
+### 安全性
+
+元イメージは直接変更しません。raw編集では警告、出力コピー、バックアップ、SHA-256を使用します。flash操作は実装しておらず、ADB/Fastbootは情報取得、logcat、バックアップを中心にしています。
+
+---
+
+## English
+
+Android Image Tool is a cross-platform custom-ROM development utility for system, vendor, recovery, logo, boot, and related images.
+
+### Missing tools
+
+When a required external tool is missing, the GUI asks before taking action. With confirmation, ADB/Fastboot Platform-Tools are downloaded from Google's official distribution into `tools/`. For `avbtool`, `mkbootimg`, `lpunpack`, and `mkfs.erofs`, the app opens the official or upstream instructions instead of silently downloading and executing untrusted binaries.
+
+### File-based localization
+
+UI strings live in [locales/ja.json](locales/ja.json) and [locales/en.json](locales/en.json). Edit a JSON file and restart the application to customize the translation.
+
+### Safety
+
+Source images are never edited in place. Raw editing requires a warning confirmation and creates an output copy, backup, and SHA-256 report. Flashing is intentionally not automated; ADB/Fastboot features focus on inspection, logcat capture, and backups.

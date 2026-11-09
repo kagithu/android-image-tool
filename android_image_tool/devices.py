@@ -3,12 +3,13 @@ from __future__ import annotations
 import shutil
 import subprocess
 from pathlib import Path
+from .tooling import find_tool
 
 
 class AndroidTools:
     def __init__(self, adb: str = "adb", fastboot: str = "fastboot") -> None:
-        self.adb = shutil.which(adb) or adb
-        self.fastboot = shutil.which(fastboot) or fastboot
+        self.adb = find_tool(adb, "ADB device operations")
+        self.fastboot = find_tool(fastboot, "Fastboot device operations")
 
     def _run(self, command: list[str], timeout: int = 30) -> str:
         if not Path(command[0]).exists() and shutil.which(command[0]) is None:

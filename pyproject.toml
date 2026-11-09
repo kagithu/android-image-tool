@@ -15,3 +15,7 @@ android-image-tool-gui = "android_image_tool.gui:main"
 
 [tool.setuptools.packages.find]
 include = ["android_image_tool*"]
+
+[tool.setuptools.data-files]
+locales = ["locales/en.json", "locales/ja.json"]
+assets = ["assets/logo.png"]
