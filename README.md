@@ -49,7 +49,7 @@ The application never edits the source image in place. Rebuild operations create
 ### English
 
 ```powershell
-cd C:\Users\mnqhp\Documents\Android_tools
+cd %PATH%\Android_tools
 python -m pip install -e .
 python -m android_image_tool
 ```
@@ -65,7 +65,7 @@ Open an image with **Open image**. For ext4 editing, choose **Extract all**, mod
 ### 日本語
 
 ```powershell
-cd C:\Users\mnqhp\Documents\Android_tools
+cd %PATH%\Android_tools
 python -m pip install -e .
 python -m android_image_tool
 ```
