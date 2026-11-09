@@ -40,7 +40,9 @@ Cross-platform (Windows, Linux, macOS) Android partition image manager.
 
 The application never writes to the source image. Rebuild operations produce a new output file.
 
-## Run
+## Run / 起動方法
+
+### English
 
 ```powershell
 python -m pip install -e .
@@ -54,6 +56,22 @@ android-image-tool-gui
 ```
 
 Use the **Open image** button to inspect an image. For ext4 editing, choose **Extract all**, modify the extracted staging directory, then choose **Rebuild ext4**.
+
+### 日本語
+
+```powershell
+cd C:\Users\mnqhp\Documents\Android_tools
+python -m pip install -e .
+python -m android_image_tool
+```
+
+GUIは次でも起動できます。
+
+```powershell
+android-image-tool-gui
+```
+
+「イメージを開く」で解析対象を選択します。ext4を編集する場合は「すべて展開」で作業フォルダーへ展開し、ファイルを変更してから「ext4を再構築」を実行してください。
 
 For logo and other vendor-specific raw images, use **Edit raw bytes**. The tool always writes a new output image, creates `<source>.bak` once, validates the byte range, and displays the output SHA-256. Raw edits are dangerous and require explicit confirmation; verify the image with the device/vendor tooling before flashing.
 
@@ -99,6 +117,54 @@ The GUI log is written to `%USERPROFILE%\\.android-image-tool.log` on Windows an
 - [日本語ガイド](docs/README-ja.md)
 - [English FAQ](docs/FAQ-en.md)
 - [よくある質問（日本語）](docs/FAQ-ja.md)
+
+## Disclaimer / 免責事項
+
+### English
+
+This software is provided for research, education, and custom-ROM development. Image modification, AVB changes, bootloader operations, and device recovery may permanently damage a device, erase data, void a warranty, or make software unable to boot. You are responsible for backups, licenses, signing keys, device compatibility, and every command you execute. The authors and contributors provide no warranty and accept no liability for data loss, device damage, security issues, or legal consequences.
+
+### 日本語
+
+本ソフトは研究、教育、カスタムROM開発を目的として提供されます。イメージ編集、AVB変更、ブートローダー操作、端末への書き込みは、端末の破損、データ消失、保証無効化、起動不能を招く可能性があります。バックアップ、ライセンス、署名鍵、端末互換性、実行するコマンドの確認は利用者の責任です。作者および貢献者は保証を行わず、データ消失、端末破損、セキュリティ問題、法的な結果について責任を負いません。
+
+## Tools / 使用ツール
+
+### English
+
+- Python and PySide6 — application runtime and GUI
+- Android SDK Platform-Tools (`adb`, `fastboot`) — device inspection and backup
+- `mke2fs` — ext4 image creation
+- `avbtool` — AVB/vbmeta operations
+- `mkbootimg` — Android boot image creation
+- `lpunpack` — dynamic partition extraction
+- `mkfs.erofs` / EROFS tools — EROFS image operations
+- `payload-dumper-go` or compatible payload tools — OTA payload extraction
+
+External tools are optional and are only required for the related features. Their licenses and terms remain applicable.
+
+### 日本語
+
+- Python / PySide6 — アプリ本体とGUI
+- Android SDK Platform-Tools（`adb`、`fastboot`） — 端末情報取得・バックアップ
+- `mke2fs` — ext4イメージ作成
+- `avbtool` — AVB/vbmeta処理
+- `mkbootimg` — Android boot image作成
+- `lpunpack` — dynamic partition展開
+- `mkfs.erofs` / EROFS tools — EROFSイメージ処理
+- `payload-dumper-go`など — OTA payload展開
+
+外部ツールは該当機能を使う場合だけ必要です。各ツールのライセンスと利用規約が優先されます。
+
+## Credits / クレジット
+
+### English
+
+Android Image Tool is maintained by **kagithu** with assistance from **GitHub Copilot**. It builds on the Android Open Source Project ecosystem, Android SDK Platform-Tools, Linux filesystem tooling, PySide6/Qt, and the upstream projects listed above. The app icon is the user-provided artwork stored at [`assets/logo.png`](assets/logo.png).
+
+### 日本語
+
+Android Image Toolは**kagithu**が開発・管理し、**GitHub Copilot**の支援を受けています。Android Open Source Project、Android SDK Platform-Tools、Linux filesystem tools、PySide6/Qt、および上記の各上流プロジェクトを活用しています。アプリアイコンは利用者提供の画像を[`assets/logo.png`](assets/logo.png)として使用しています。
 
 ---
 
