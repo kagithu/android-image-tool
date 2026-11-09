@@ -5,12 +5,13 @@ from pathlib import Path
 
 from .android import parse_payload, parse_super
 from .avb import avbtool_info, parse_vbmeta
-from .boot import extract_boot_parts, parse_boot
+from .boot import extract_boot_parts, pack_ramdisk, parse_boot, unpack_ramdisk
 from .devices import AndroidTools
 from .editing import patch_binary
 from .ext4 import Ext4Image, rebuild_ext4
 from .formats import detect_format
 from .sparse import unsparse
+from .validation import validate_image
 
 
 def main() -> None:
@@ -49,6 +50,15 @@ def main() -> None:
     backup = sub.add_parser("backup-partition")
     backup.add_argument("partition")
     backup.add_argument("output", type=Path)
+    ramdisk_unpack = sub.add_parser("ramdisk-unpack")
+    ramdisk_unpack.add_argument("ramdisk", type=Path)
+    ramdisk_unpack.add_argument("output", type=Path)
+    ramdisk_pack = sub.add_parser("ramdisk-pack")
+    ramdisk_pack.add_argument("source", type=Path)
+    ramdisk_pack.add_argument("output", type=Path)
+    ramdisk_pack.add_argument("--compression", choices=("gzip", "cpio"), default="gzip")
+    validate = sub.add_parser("validate")
+    validate.add_argument("image", type=Path)
     args = parser.parse_args()
     try:
         if args.command == "info":
@@ -94,6 +104,14 @@ def main() -> None:
         elif args.command == "backup-partition":
             AndroidTools().backup_partition(args.partition, args.output)
             print(args.output)
+        elif args.command == "ramdisk-unpack":
+            print(unpack_ramdisk(args.ramdisk, args.output))
+        elif args.command == "ramdisk-pack":
+            pack_ramdisk(args.source, args.output, args.compression)
+            print(args.output)
+        elif args.command == "validate":
+            for check in validate_image(args.image):
+                print(f"[{check.level}] {check.message}")
         else:
             print(f"expanded {unsparse(args.image, args.output)} bytes")
     except (OSError, ValueError, RuntimeError) as error:

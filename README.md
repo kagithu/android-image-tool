@@ -13,6 +13,8 @@ Cross-platform (Windows, Linux, macOS) Android partition image manager.
 - Warning-gated raw binary patching for logo/boot/vendor-specific images.
 - Automatic source backup (`.bak`), SHA-256 reporting, and error logging.
 - Android boot image and vbmeta inspection/extraction.
+- Ramdisk gzip/cpio unpacking and repacking for `init`, `fstab`, and early-boot changes.
+- Image validation and SHA-256 integrity reporting.
 - ADB/Fastboot device information, logcat capture, and partition backup helpers.
 
 The application never writes to the source image. Rebuild operations produce a new output file.
@@ -39,13 +41,18 @@ Useful ROM-development CLI commands:
 ```powershell
 python -m android_image_tool.cli boot-info boot.img
 python -m android_image_tool.cli boot-extract boot.img extracted-boot
+python -m android_image_tool.cli ramdisk-unpack extracted-boot/ramdisk ramdisk
+python -m android_image_tool.cli ramdisk-pack ramdisk ramdisk-new
 python -m android_image_tool.cli vbmeta-info vbmeta.img
+python -m android_image_tool.cli validate boot.img
 python -m android_image_tool.cli device-info
 python -m android_image_tool.cli logcat --output boot.log
 python -m android_image_tool.cli backup-partition system system-backup.img
 ```
 
 ADB/Fastboot tools must be installed separately (Android SDK platform-tools). Partition backup requires a rooted device and uses `adb exec-out`; it never runs a flash command.
+
+Ramdisk editing currently preserves file contents and paths but does not yet rebuild the complete boot image header/checksums. Replace the ramdisk through a boot-image-aware tool and verify AVB before flashing.
 
 ## Notes
 
